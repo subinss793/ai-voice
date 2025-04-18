@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Test | PronunX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Progress Ring */
+        .progress-ring {
+            width: 160px;
+            height: 160px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .progress-ring svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring circle {
+            fill: transparent;
+            stroke-width: 10;
+        }
+
+        .progress-ring .track {
+            stroke: #e5e7eb;
+        }
+
+        .progress-ring .progress {
+            stroke: #3b82f6;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.3s ease;
+        }
+
+        /* Assistant */
+        #assistant {
+            width: 120px;
+            height: 120px;
+            background: #bfdbfe;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: absolute;
+        }
+
+        #assistant-face {
+            font-size: 4rem;
+        }
+
+        /* Assistant Emoji Hover Effect */
+        #assistant {
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        /* Hover Effect */
+        #assistant:hover {
+            transform: scale(1.1); /* Slight zoom */
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); /* Soft blue glow */
+        }
+
+        /* Emoji Animation */
+        #assistant-face {
+            transition: transform 0.2s;
+        }
+
+        /* Bounce Effect on Hover */
+        #assistant:hover #assistant-face {
+            transform: scale(1.2);
+        }
+
+        /* Assistant Listening Effect */
+        #assistant.listening {
+            background: #ebedec;  /* Soft green */
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);  /* Green glow */
+            animation: pulse 1s infinite;
+        }
+
+        /* Pulse Animation */
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 10px rgba(52, 211, 153, 0.6);
+            }
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 0 20px rgba(52, 211, 153, 0.8);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 10px rgba(52, 211, 153, 0.6);
+            }
+        }
+
+        /* Ripple Animation (Optional) */
+        #assistant.listening::after {
+            content: "";
+            width: 120%;
+            height: 120%;
+            position: absolute;
+            border: 2px solid rgba(187, 191, 189, 0.5);
+            border-radius: 50%;
+            animation: ripple 1.5s infinite;
+            pointer-events: none;
+        }
+
+        /* Ripple Keyframes */
+        @keyframes ripple {
+            0% {
+                transform: scale(1);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+
+
+        /* ===== Common Hover Effect for All Emojis ===== */
+        #assistant {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        #assistant:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+
+
+
+        /* Pulse Animation */
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 10px rgba(52, 211, 153, 0.6);
+            }
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 0 20px rgba(52, 211, 153, 0.8);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 10px rgba(52, 211, 153, 0.6);
+            }
+        }
+
+        /* ===== Correct Effect (😄) ===== */
+        #assistant.correct {
+            background: white;
+            animation: bounce 0.5s ease;
+        }
+
+        /* Bounce Animation */
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* ===== Incorrect Effect (😕) ===== */
+        #assistant.incorrect {
+            background:white;
+            animation: shake 0.4s ease;
+        }
+
+        /* Shake Animation */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+
+        /* ===== Idle Effect (🙂) ===== */
+        #assistant.idle {
+            background: #bfdbfe;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }        
+
+        /* Hue Effect Animation
+        @keyframes hueRotate {
+            0% {
+                stroke: hsl(0, 100%, 50%);
+            }
+            16% {
+                stroke: hsl(60, 100%, 50%);
+            }
+            33% {
+                stroke: hsl(120, 100%, 50%);
+            }
+            50% {
+                stroke: hsl(180, 100%, 50%);
+            }
+            66% {
+                stroke: hsl(240, 100%, 50%);
+            }
+            83% {
+                stroke: hsl(300, 100%, 50%);
+            }
+            100% {
+                stroke: hsl(360, 100%, 50%);
+            }
+        } */
+
+        /* Apply Hue Animation
+        .progress-ring .progress {
+            animation: hueRotate 4s linear infinite;
+        } */
+    </style>
+</head>
+
+<body class="bg-gray-100 text-gray-900 font-sans antialiased">
+    <form id="progress-form" method="post" style="display: none;">
+        {% csrf_token %}
+    </form>
+
+    <!-- Container -->
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white shadow-md border-r border-gray-200 flex flex-col">
+            <div class="p-10 border-b">
+                <h1 class="text-3xl font-bold text-blue-500 tracking-wide">Pronun<span class="text-gray-500">X</span></h1>
+            </div>
+            <nav class="mt-6 flex-1">
+                <a href="/dashboard/" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-100 hover:text-blue-800 transition rounded-lg">
+                    🏠 <span class="ml-3">Dashboard</span>
+                </a>
+                <a href="/check_pronunciation/" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-100 hover:text-blue-800 transition rounded-lg">
+                    🎤 <span class="ml-3">Practice</span>
+                </a>
+                <a href="/progress/" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-100 hover:text-blue-800 transition rounded-lg">
+                    📊 <span class="ml-3">Progress</span>
+                </a>
+                <a href="/test/" class="flex items-center px-6 py-3 bg-blue-100 text-blue-800 rounded-lg">
+                    📝 <span class="ml-3">Test</span>
+                </a>
+                <a href="/translate/" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-100 hover:text-blue-800 transition rounded-lg">
+                    🌎 <span class="ml-3">Translation</span>
+                </a>
+            </nav>
+            <div class="p-6 border-t">
+                <a href="/logout/" class="block w-full text-center bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded transition duration-200">
+                    Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6">
+            <header class="mb-6">
+                <h2 class="text-4xl font-bold text-blue-500">Test Your Pronunciation 🎙️</h2>
+                <p class="text-gray-600 mt-1 text-lg">Progress through levels by passing each question!</p>
+                <div class="mt-4 text-lg">
+                    Level: <span id="current-level" class="font-bold text-blue-500">Beginner</span>
+                </div>
+            </header>
+
+            <!-- Progress and Avatar -->
+            <div class="flex justify-center mb-6">
+                <div class="progress-ring">
+                    <svg>
+                        <circle class="track" cx="80" cy="80" r="70"></circle>
+                        <circle class="progress" cx="80" cy="80" r="70"></circle>
+                    </svg>
+                    <div id="assistant">
+                        <span id="assistant-face">🙂</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Section -->
+            <div class="space-y-4 text-center">
+                <p class="text-lg font-medium text-gray-800">Question:</p>
+                <p id="question-text" class="text-2xl font-bold text-gray-700">{{ question.question }}</p>
+                <p class="text-sm text-gray-500">Answer Key: <span id="answer-key" class="font-bold text-green-600">{{ question.answer_key }}</span></p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-center space-x-4 mt-6">
+                <button onclick="startRecording()" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow transition">
+                    🎙️ Record Answer
+                </button>
+                <button onclick="checkAnswer()" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-6 rounded-lg shadow transition">
+                    ✅ Check Answer
+                </button>
+            </div>
+
+            <!-- Feedback -->
+            <div id="feedback" class="mt-4 hidden text-center text-sm p-3 rounded-md"></div>
+        </main>
+    </div>
+
+    <script>
+        let recordedAnswer = "";
+        let progress = 0;
+        const radius = 70;
+        const circumference = 2 * Math.PI * radius;
+        const progressCircle = document.querySelector(".progress");
+
+
+        function getCSRFToken() {
+            const token = document.querySelector('[name=csrfmiddlewaretoken]');
+            return token ? token.value : '';
+        }
+        // Fetch progress and update the UI
+        async function fetchProgress() {
+            try {
+                const response = await fetch('/test/progress/');
+                const data = await response.json();
+                progress = data.progress;
+                updateProgress();
+                document.getElementById("current-level").textContent = data.level;
+            } catch (error) {
+                console.error("Failed to fetch progress:", error);
+            }
+        }
+
+        // Increment progress
+        async function incrementProgress() {
+            console.log("Incrementing progress...");  // Add this line
+            try {
+                const csrfToken = getCSRFToken();
+                const response = await fetch('/test/progress/update/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ increment: 10 })
+                });
+
+                if (!response.ok) {
+                    console.error("Failed to update progress:", response.status);
+                    return;
+                }
+
+                const data = await response.json();
+                console.log("Progress updated:", data);  // Add this line
+                progress = data.progress;
+                updateProgress();
+                document.getElementById("current-level").textContent = data.level;
+            } catch (error) {
+                console.error("Failed to update progress:", error);
+            }
+        }
+
+        // Update the progress ring visually
+        function updateProgress() {
+            const offset = circumference - (progress / 100) * circumference;
+            progressCircle.style.strokeDasharray = circumference;
+            progressCircle.style.strokeDashoffset = offset;
+
+            // Blue hue stays around 220, but lightness goes from 80% to 40%
+            const hue = 220;
+            const lightness = 80 - (progress * 0.4);  // Lightness decreases as progress increases
+            const color = `hsl(${hue}, 100%, ${lightness}%)`;
+
+            progressCircle.style.stroke = color;
+        }
+        // Start recording the user's answer
+// Start Recording (Add the class when recording starts)
+        function startRecording() {
+            const assistant = document.getElementById("assistant");
+            const face = document.getElementById("assistant-face");
+
+            // Show listening state
+            assistant.classList.add("listening");
+            face.textContent = "👂";
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = "en-US";
+
+            recognition.onresult = (event) => {
+                recordedAnswer = event.results[0][0].transcript.toLowerCase();
+                showFeedback("🗣️ Recorded: " + recordedAnswer, "bg-blue-100 text-blue-800");
+                
+                // Remove listening state after recording
+                assistant.classList.remove("listening");
+                face.textContent = "🙂";
+            };
+
+            recognition.onend = () => {
+                // Ensure listening effect is removed even if the user stops
+                assistant.classList.remove("listening");
+                face.textContent = "🙂";
+            };
+
+            recognition.start();
+        }
+
+        // Check the recorded answer
+        async function checkAnswer() {
+            const answerKey = document.getElementById("answer-key").textContent.trim().toLowerCase();
+            const cleanedAnswer = recordedAnswer.replace(/[^\w\s]/g, "").trim().toLowerCase();
+
+            // Check if the cleaned answer contains the correct answer as a word
+            const answerWords = cleanedAnswer.split(/\s+/);
+            const isCorrect = answerWords.includes(answerKey);
+            const face = document.getElementById("assistant-face");
+
+            try {
+                const csrfToken = getCSRFToken();
+                const response = await fetch('/test/progress/check_answer/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({
+                        recorded_answer: cleanedAnswer,
+                        correct_answer: answerKey
+                    })
+                });
+
+                console.log("Response status:", response.status);
+
+                if (!response.ok) {
+                    console.error("Failed to check the answer:", response.status);
+                    showFeedback("⚠️ Error checking answer. Please try again.", "bg-red-100 text-red-800");
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (isCorrect) {
+                    assistant.classList.add("correct");
+                    face.textContent = "😄";
+                    showFeedback("✅ Correct Answer!", "bg-green-100 text-green-800");
+
+                    // Increment progress only if the answer is correct
+                    await incrementProgress();
+
+                    progress = data.progress;
+                    document.getElementById("current-level").textContent = data.level;
+                    updateProgress();
+
+                    // Automatically load the next question after a short delay
+                    setTimeout(loadNextQuestion, 1000);
+                } else {
+                    const hint = data.hint || "Try again with more attention!";
+                    assistant.classList.add("incorrect");
+                    face.textContent = "😕";
+                    showFeedback(`❌ Incorrect! Hint: ${hint}`, "bg-red-100 text-red-800");
+                    face.textContent = "😢";  // Sad emoji for incorrect answer
+                }
+            } catch (error) {
+                console.error("Failed to check the answer:", error);
+                showFeedback("⚠️ Error checking answer. Please try again.", "bg-red-100 text-red-800");
+            }
+        }
+
+        // Load the next question
+        async function loadNextQuestion() {
+            try {
+                const response = await fetch('/test/next_question/');
+                if (!response.ok) throw new Error('Failed to load the next question.');
+                const data = await response.json();
+
+                // Update the question text and answer key
+                document.getElementById("question-text").textContent = data.question;
+                document.getElementById("answer-key").textContent = data.answer_key;
+
+                // Reset feedback, emoji, and progress
+                document.getElementById("feedback").classList.add("hidden");
+                recordedAnswer = "";
+                document.getElementById("assistant-face").textContent = "🙂";  // Reset to neutral face
+            } catch (error) {
+                console.error(error);
+                showFeedback("⚠️ Failed to load the next question. Please try again.", "bg-red-100 text-red-800");
+            }
+        }
+
+        // Show feedback messages
+        function showFeedback(message, classes) {
+            const feedback = document.getElementById("feedback");
+            feedback.textContent = message;
+            feedback.className = `mt-4 text-center text-sm p-3 rounded-md ${classes}`;
+            feedback.classList.remove("hidden");
+        }
+
+        // Initial load
+        fetchProgress();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PronunX | Translation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans antialiased">
+
+    <!-- Container -->
+    <div class="min-h-screen flex">
+        <!-- Sidebar (No changes) -->
+        <aside class="w-64 bg-white shadow-md border-r border-gray-200 flex flex-col">
+            <div class="p-10 border-b">
+                <h1 class="text-3xl font-bold text-blue-500 tracking-wide">Pronun<span class="text-gray-500">X</span></h1>
+            </div>
+
+            <nav class="mt-6 flex-1">
+                <a href="/dashboard/" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-100 hover:text-blue-800 transition rounded-lg">
+                    🏠 <span class="ml-3">Dashboard</span>
+                </a>
+                <a href="/check_pronunciation/" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-100 hover:text-blue-800 transition rounded-lg">
+                    🎤 <span class="ml-3">Practice</span>
+                </a>
+                <a href="/progress/" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-100 hover:text-blue-800 transition rounded-lg">
+                    📊 <span class="ml-3">Progress</span>
+                </a>
+                <!-- New Test Page Link -->
+                <a href="/test/" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-100 hover:text-blue-800 transition rounded-lg">
+                    📝 <span class="ml-3">Test</span>
+                </a>
+                <a href="/translate/" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-100 hover:text-blue-800 transition rounded-lg">
+                    🌎 <span class="ml-3">Translation</span>
+                </a>
+            </nav>
+
+            <div class="p-6 border-t">
+                <a href="/logout/" class="block w-full text-center bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded transition duration-200">
+                    🚪 Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8">
+            <!-- Header -->
+            <div class="mb-8">
+                <h2 class="text-4xl font-bold text-blue-500">Translation 🌎</h2>
+                <p class="text-gray-600 mt-2">Translate your words instantly and practice pronunciation.</p>
+            </div>
+
+            <!-- Translation Form -->
+            <form id="translate-form" method="POST" action="{% url 'translate' %}" class="bg-white shadow-lg rounded-lg p-6">
+                {% csrf_token %}
+
+                <!-- Text Input -->
+                <div class="mb-4">
+                    <label for="text" class="block text-sm font-medium text-gray-700">Enter Text:</label>
+                    <div class="flex mt-2">
+                        <input type="text" id="text" name="text" class="flex-1 px-4 py-2 border rounded-l-md focus:ring-blue-500 focus:border-blue-500" required>
+                        <button type="button" onclick="recordSpeech()" class="bg-blue-500 text-white px-4 py-2 rounded-r-md hover:bg-blue-600 transition">
+                            🎙 Speak <span id="mic-icon" class="ml-2 hidden animate-ping">🔴</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Input Language -->
+                <div class="mb-4">
+                    <label for="input-language" class="block text-sm font-medium text-gray-700">Input Language:</label>
+                    <select id="input-language" class="mt-2 block w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="en">English</option>
+                        <option value="ml">Malayalam</option>
+                        <option value="ta">Tamil</option>
+                    </select>
+                </div>
+
+                <!-- Translation Language -->
+                <div class="mb-4">
+                    <label for="language" class="block text-sm font-medium text-gray-700">Translate to:</label>
+                    <select name="language" id="language" class="mt-2 block w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="en">English</option>
+                        <option value="zh-cn">Chinese</option>
+                        <option value="ta">Tamil</option>
+                        <option value="ml">Malayalam</option>
+                    </select>
+                </div>
+
+                <!-- Translate Button -->
+                <button type="submit" onclick="showLoading(event)" id="translate-button" class="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition flex items-center justify-center space-x-2 disabled:bg-green-300 disabled:cursor-not-allowed">
+                    <span id="button-text">Translate</span>
+                    <svg id="loading-spinner" class="hidden w-5 h-5 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                    </svg>
+                </button>
+            </form>
+
+            <!-- Translated Text Display -->
+            <div class="mt-8 bg-gray-100 p-4 rounded-lg border">
+                <h3 class="text-xl font-bold text-gray-800">Translated Text:</h3>
+                <p id="translated-text" class="mt-2 text-gray-700">{{ translated_text }}</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Persistent Language & Text
+        document.addEventListener("DOMContentLoaded", () => {
+            localStorage.clear();  // Clears localStorage on every refresh
+
+            const inputLang = document.getElementById("input-language");
+            const outputLang = document.getElementById("language");
+            const textInput = document.getElementById("text");
+
+            inputLang.value = "en";
+            outputLang.value = "en";
+            textInput.value = "";
+
+            inputLang.addEventListener("change", () => localStorage.setItem("inputLanguage", inputLang.value));
+            outputLang.addEventListener("change", () => localStorage.setItem("outputLanguage", outputLang.value));
+            textInput.addEventListener("input", () => localStorage.setItem("inputText", textInput.value));
+        });
+
+
+        // Speech Recognition
+        function recordSpeech() {
+            const micIcon = document.getElementById("mic-icon");
+            const textInput = document.getElementById("text");
+            const inputLanguage = document.getElementById("input-language").value;
+
+            micIcon.classList.remove("hidden");
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Speech Recognition is not supported in this browser.");
+                micIcon.classList.add("hidden");
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = inputLanguage === "ml" ? "ml-IN" : inputLanguage === "ta" ? "ta-IN" : "en-US";
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onresult = (event) => {
+                const spokenText = event.results[0][0].transcript;
+                textInput.value = spokenText;
+                localStorage.setItem("inputText", spokenText);
+                micIcon.classList.add("hidden");
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech recognition error:", event.error);
+                alert("Error: " + event.error);
+                micIcon.classList.add("hidden");
+            };
+
+            recognition.start();
+        }
+
+        // Show Loading Spinner
+        function showLoading() {
+            const loadingSpinner = document.getElementById("loading-spinner");
+            loadingSpinner.classList.remove("hidden");
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PronunX | Practice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans antialiased">
+
+    <!-- Container -->
+    <div class="min-h-screen flex">
+        <!-- Sidebar (No changes) -->
+        <aside class="w-64 bg-white shadow-md border-r border-gray-200 flex flex-col">
+            <div class="p-10 border-b">
+                <h1 class="text-3xl font-bold text-blue-500 tracking-wide">Pronun<span class="text-gray-500">X</span></h1>
+            </div>
+
+            <nav class="mt-6 flex-1">
+                <a href="/dashboard/" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-100 hover:text-blue-800 transition rounded-lg">
+                    🏠 <span class="ml-3">Dashboard</span>
+                </a>
+                <a href="/check_pronunciation/" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-100 hover:text-blue-800 transition rounded-lg">
+                    🎤 <span class="ml-3">Practice</span>
+                </a>
+                <a href="/progress/" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-100 hover:text-blue-800 transition rounded-lg">
+                    📊 <span class="ml-3">Progress</span>
+                </a>
+                <!-- New Test Page Link -->
+                <a href="/test/" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-100 hover:text-blue-800 transition rounded-lg">
+                    📝 <span class="ml-3">Test</span>
+                </a>
+                <a href="/translate/" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-100 hover:text-blue-800 transition rounded-lg">
+                    🌎 <span class="ml-3">Translation</span>
+                </a>
+            </nav>
+
+            <div class="p-6 border-t">
+                <a href="/logout/" class="block w-full text-center bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded transition duration-200">
+                    🚪 Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8">
+            <!-- Header -->
+            <div class="mb-8">
+                <h2 class="text-4xl font-bold text-blue-500">Pronunciation Practice 🎤</h2>
+                <p class="text-gray-600 mt-2">Sharpen your pronunciation skills with instant feedback.</p>
+            </div>
+
+            <!-- Practice Card -->
+            <div class="bg-white shadow-lg rounded-lg p-6 space-y-6">
+                <!-- Sentence Suggestions -->
+                <div>
+                    <label for="suggestions" class="block text-sm font-medium text-gray-700 mb-2">Choose a sentence:</label>
+                    <select id="suggestions" onchange="setSuggestion()" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="">Select a sentence</option>
+                        <option value="Hello, how are you?">Hello, how are you?</option>
+                        <option value="I love learning new languages.">I love learning new languages.</option>
+                        <option value="The quick brown fox jumps over the lazy dog.">The quick brown fox jumps over the lazy dog.</option>
+                        <option value="Practice makes perfect.">Practice makes perfect.</option>
+                    </select>
+                </div>
+
+                <!-- Custom Input -->
+                <div>
+                    <label for="word" class="block text-sm font-medium text-gray-700 mb-2">Or enter your own:</label>
+                    <textarea id="word" placeholder="Type a word or sentence..." rows="3"
+                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none transition-all duration-300 ease-in-out"
+                        oninput="autoExpand(this); fetchPhonetics()"></textarea>
+                </div>
+
+                <!-- Phonetics Display -->
+                <div id="phonetics-container" class="hidden p-4 bg-gray-50 rounded-lg">
+                    <h3 class="font-semibold text-gray-700 mb-2">Phonetics:</h3>
+                    <div id="phonetics-display" class="text-gray-800"></div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex items-center space-x-4">
+                    <button onclick="startRecording()" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow transition">
+                        🎙️ Record <span id="mic-icon" class="ml-2 hidden animate-pulse">🎤</span>
+                    </button>
+
+                    <button onclick="submitPronunciation()" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-6 rounded-lg shadow transition">
+                        ✅ Submit
+                    </button>
+
+                    <button onclick="playCorrectPronunciation()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-2 px-6 rounded-lg shadow transition">
+                        🔊 Hear Pronunciation
+                    </button>
+                </div>
+            </div>
+
+            <!-- Feedback Section -->
+            <div id="feedback" class="mt-6 hidden"></div>
+        </main>
+    </div>
+
+    <script>
+        let spokenText = "";
+
+        function setSuggestion() {
+            const suggestion = document.getElementById("suggestions").value;
+            document.getElementById("word").value = suggestion;
+            fetchPhonetics();
+        }
+
+        function startRecording() {
+            const micIcon = document.getElementById("mic-icon");
+            micIcon.classList.remove("hidden");
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Speech Recognition is not supported in this browser.");
+                micIcon.classList.add("hidden");
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = "en-US";
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onresult = (event) => {
+                spokenText = event.results[0][0].transcript;
+                micIcon.classList.add("hidden");
+                showFeedback("Recorded Voice: 🗣️ " + spokenText, "bg-blue-100 text-blue-800");
+            };
+
+            recognition.onerror = (event) => {
+                showFeedback("Error: " + event.error, "bg-red-100 text-red-800");
+                micIcon.classList.add("hidden");
+            };
+
+            recognition.start();
+        }
+
+        function playCorrectPronunciation() {
+            const word = document.getElementById("word").value.trim();
+            if (word === "") {
+                alert("Please enter a word first!");
+                return;
+            }
+            const synth = window.speechSynthesis;
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = "en-US";
+            synth.speak(utterance);
+        }
+
+        function normalizeText(text) {
+            return text.toLowerCase().replace(/[.,!?]/g, "").trim();
+        }
+
+        function submitPronunciation() {
+            const word = normalizeText(document.getElementById("word").value);
+            const spoken = normalizeText(spokenText);
+
+            if (word === spoken) {
+                showFeedback("✅ Correct pronunciation!", "bg-green-100 text-green-800");
+            } else {
+                showFeedback(`❌ Incorrect. You said "${spokenText}", but the correct word is "${word}"`, "bg-red-100 text-red-800");
+            }
+
+            // Update progress after each pronunciation
+            fetch('{% url "check_pronunciation" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    word: word,
+                    spoken_word: spokenText
+                })
+            })
+            .then(response => response.json())
+            .then(data => console.log("Progress updated:", data))
+            .catch(error => console.error("Error updating progress:", error));
+        }
+
+        function showFeedback(message, classes) {
+            const feedback = document.getElementById("feedback");
+            feedback.className = `mt-6 p-4 rounded-lg shadow ${classes}`;
+            feedback.textContent = message;
+            feedback.classList.remove("hidden");
+        }
+
+        function autoExpand(textarea) {
+            textarea.style.height = 'auto';  // Reset height to recalculate
+            textarea.style.height = (textarea.scrollHeight) + 'px';  // Set new height
+        }
+
+        // New function to fetch phonetics from Free Dictionary API
+        async function fetchPhonetics() {
+            const word = document.getElementById("word").value.trim();
+            if (!word) {
+                document.getElementById("phonetics-container").classList.add("hidden");
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+                const data = await response.json();
+                
+                const phoneticsContainer = document.getElementById("phonetics-container");
+                const phoneticsDisplay = document.getElementById("phonetics-display");
+                
+                if (Array.isArray(data) && data.length > 0 && data[0].phonetics) {
+                    let html = '';
+                    const entry = data[0];
+                    
+                    // Display phonetic notation if available
+                    if (entry.phonetic) {
+                        html += `<p class="mb-2"><span class="font-medium">Phonetic:</span> ${entry.phonetic}</p>`;
+                    }
+                    
+                    // Display all phonetic audio and text
+                    entry.phonetics.forEach((phonetic, index) => {
+                        if (phonetic.text) {
+                            html += `<div class="mb-2">
+                                <span class="font-medium">Pronunciation ${index + 1}:</span> ${phonetic.text}
+                                ${phonetic.audio ? `<button onclick="playAudio('${phonetic.audio}')" class="ml-2 text-blue-500 hover:text-blue-700">▶️ Listen</button>` : ''}
+                            </div>`;
+                        }
+                    });
+                    
+                    // Display meanings (first definition)
+                    if (entry.meanings && entry.meanings.length > 0) {
+                        html += `<div class="mt-4 pt-4 border-t border-gray-200">`;
+                        entry.meanings.slice(0, 2).forEach(meaning => {
+                            html += `<div class="mb-3">
+                                <p class="font-medium">${meaning.partOfSpeech}</p>
+                                <ul class="list-disc list-inside ml-2">`;
+                            meaning.definitions.slice(0, 3).forEach((def, i) => {
+                                html += `<li>${def.definition}</li>`;
+                            });
+                            html += `</ul></div>`;
+                        });
+                        html += `</div>`;
+                    }
+                    
+                    phoneticsDisplay.innerHTML = html;
+                    phoneticsContainer.classList.remove("hidden");
+                } else {
+                    phoneticsContainer.classList.add("hidden");
+                }
+            } catch (error) {
+                console.error("Error fetching phonetics:", error);
+                document.getElementById("phonetics-container").classList.add("hidden");
+            }
+        }
+
+        // New function to play pronunciation audio
+        function playAudio(audioUrl) {
+            if (audioUrl) {
+                const audio = new Audio(audioUrl);
+                audio.play().catch(e => console.error("Error playing audio:", e));
+            }
+        }
+    </script>
+
+</body>
+</html>

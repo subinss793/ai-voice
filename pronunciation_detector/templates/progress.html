@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PronunX | Progress</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-900 font-sans antialiased">
+
+    <!-- Container -->
+    <div class="min-h-screen flex">
+        <!-- Sidebar (Stable) -->
+        <aside class="w-64 bg-white shadow-md border-r border-gray-200 flex flex-col">
+            <div class="p-10 border-b">
+                <h1 class="text-3xl font-bold text-blue-500 tracking-wide">Pronun<span class="text-gray-500">X</span></h1>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="mt-6 flex-1">
+                <a href="/dashboard/" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-100 hover:text-blue-800 transition rounded-lg">
+                    🏠 <span class="ml-3">Dashboard</span>
+                </a>
+                <a href="/check_pronunciation/" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-100 hover:text-blue-800 transition rounded-lg">
+                    🎤 <span class="ml-3">Practice</span>
+                </a>
+                <a href="/progress/" class="flex items-center px-6 py-3 bg-blue-100 text-blue-800 rounded-lg">
+                    📊 <span class="ml-3">Progress</span>
+                </a>
+                <!-- New Test Page Link -->
+                <a href="/test/" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-100 hover:text-blue-800 transition rounded-lg">
+                    📝 <span class="ml-3">Test</span>
+                </a>
+                <a href="/translate/" class="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-100 hover:text-blue-800 transition rounded-lg">
+                    🌎 <span class="ml-3">Translation</span>
+                </a>
+            </nav>
+
+            <!-- Logout Button -->
+            <div class="p-6 border-t">
+                <a href="/logout/" class="block w-full text-center bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded transition duration-200">
+                    🚪 Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8">
+            <!-- Header -->
+            <div class="mb-8">
+                <h2 class="text-4xl font-bold text-blue-500">Your Pronunciation Progress 📊</h2>
+                <p class="text-gray-600 mt-2">Track your improvement over time and see the words you practiced.</p>
+            </div>
+
+            <!-- Progress Table -->
+            <div class="bg-white shadow-lg rounded-lg p-6">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-white uppercase bg-blue-600">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">Word</th>
+                            <th scope="col" class="px-6 py-3">Pronounced As</th>
+                            <th scope="col" class="px-6 py-3">Accuracy</th>
+                            <th scope="col" class="px-6 py-3">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="progress-body" class="divide-y divide-gray-200">
+                        {% for record in records %}
+                        <tr class="hover:bg-blue-50 transition">
+                            <td class="px-6 py-4">{{ record.word }}</td>
+                            <td class="px-6 py-4">{{ record.spoken_word }}</td>
+                            <td class="px-6 py-4">
+                                <span class="font-semibold {% if record.accuracy >= 80 %}text-green-600{% elif record.accuracy >= 50 %}text-yellow-500{% else %}text-red-500{% endif %}">
+                                    {{ record.accuracy }}%
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">{{ record.timestamp }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="px-6 py-4 text-center text-gray-500">No progress recorded yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- Live Update Script -->
+    <script>
+        // Fetch progress records periodically
+        function fetchProgress() {
+            fetch('/get_progress/')
+                .then(response => response.json())
+                .then(data => {
+                    const progressBody = document.getElementById('progress-body');
+                    progressBody.innerHTML = ''; // Clear existing records
+
+                    if (data.length === 0) {
+                        progressBody.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">No progress recorded yet.</td></tr>';
+                        return;
+                    }
+
+                    // Append new records
+                    data.forEach(record => {
+                        const accuracyClass = record.accuracy >= 80 ? 'text-green-600' :
+                                              record.accuracy >= 50 ? 'text-yellow-500' : 'text-red-500';
+
+                        const row = `<tr class="hover:bg-blue-50 transition">
+                            <td class="px-6 py-4">${record.word}</td>
+                            <td class="px-6 py-4">${record.spoken_word}</td>
+                            <td class="px-6 py-4"><span class="font-semibold ${accuracyClass}">${record.accuracy}%</span></td>
+                            <td class="px-6 py-4">${record.timestamp}</td>
+                        </tr>`;
+                        progressBody.innerHTML += row;
+                    });
+                })
+                .catch(error => console.error('Error fetching progress:', error));
+        }
+
+        // Fetch progress immediately when the page loads
+        window.onload = fetchProgress;
+
+        // Fetch progress every 3 seconds (adjust if needed)
+        setInterval(fetchProgress, 3000);
+    </script>
+
+</body>
+</html>
